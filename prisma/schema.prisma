@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+model User {
+  id               String            @id @default(uuid())
+  telegramId       BigInt            @unique
+  telegramUsername String?
+  firstName        String?
+  lastName         String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  payments         Payment[]
+  subscriptions    Subscription[]
+  telegramAccesses TelegramAccess[]
+  authSessions     AuthSession[]
+}
+
+model Plan {
+  id           String         @id @default(uuid())
+  name         String
+  description  String
+  price        Decimal        @db.Decimal(10, 2)
+  currency     String         @default("USD")
+  durationDays Int
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  payments     Payment[]
+  subscriptions Subscription[]
+}
+
+model Payment {
+  id                String         @id @default(uuid())
+  userId            String
+  planId            String
+  provider          String
+  providerInvoiceId String?
+  amount            Decimal        @db.Decimal(10, 2)
+  currency          String
+  status            String
+  providerPayload   Json?
+  paidAt            DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan              Plan           @relation(fields: [planId], references: [id], onDelete: Restrict)
+  subscriptionId    String?
+  subscription      Subscription?  @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([providerInvoiceId])
+  @@unique([provider, providerInvoiceId])
+}
+
+model Subscription {
+  id               String            @id @default(uuid())
+  userId           String
+  planId           String
+  payments         Payment[]
+  status           String
+  startsAt         DateTime
+  expiresAt        DateTime
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan             Plan              @relation(fields: [planId], references: [id], onDelete: Restrict)
+  telegramAccesses TelegramAccess[]
+
+  @@unique([userId, planId])
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model TelegramAccess {
+  id             String       @id @default(uuid())
+  userId         String
+  subscriptionId String
+  chatId         String
+  inviteLink     String
+  status         String
+  joinedAt       DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+
+  @@unique([subscriptionId])
+}
+
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  provider    String
+  eventId     String
+  eventType   String
+  payload     Json
+  processed   Boolean  @default(false)
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([provider, eventId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorType  String
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+}
+
+model AuthSession {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String?
+  status    String   @default("PENDING") // PENDING, AUTHENTICATED, EXPIRED
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
