@@ -43,3 +43,6 @@ next-env.d.ts
 # Phase 9 testing
 phase9-test-manifest.json
 phase9-preflight-*.dump
+
+.vercel
+.env*
