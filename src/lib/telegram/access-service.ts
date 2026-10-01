@@ -183,7 +183,7 @@ export class TelegramAccessService {
     if (!user) {
       await declineChatJoinRequest(chatId, telegramId);
       try {
-        await sendMessage(telegramId, `Hello! To join this private channel, you first need to create an account and subscribe.\n\nPlease visit our website to subscribe: ${process.env.NEXT_PUBLIC_APP_URL || 'https://parcel-power-dividable.ngrok-free.dev'}`);
+        await sendMessage(telegramId, `Hello! To join this private channel, you first need to create an account and subscribe.\n\nPlease visit our website to subscribe: ${process.env.NEXT_PUBLIC_APP_URL || ''}`);
       } catch (e) {
         console.error("Failed to send message to user:", e);
       }
@@ -193,7 +193,7 @@ export class TelegramAccessService {
     if (user.subscriptions.length === 0) {
       await declineChatJoinRequest(chatId, telegramId);
       try {
-        await sendMessage(telegramId, `Hello! We couldn't find an active subscription for your account.\n\nPlease visit our website to subscribe and gain access: ${process.env.NEXT_PUBLIC_APP_URL || 'https://parcel-power-dividable.ngrok-free.dev'}`);
+        await sendMessage(telegramId, `Hello! We couldn't find an active subscription for your account.\n\nPlease visit our website to subscribe and gain access: ${process.env.NEXT_PUBLIC_APP_URL || ''}`);
       } catch (e) {
         console.error("Failed to send message to user:", e);
       }
