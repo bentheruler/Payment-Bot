@@ -17,9 +17,11 @@ if (process.env.NODE_ENV === "test") {
   
   prisma = new PrismaClient({ adapter });
 } else {
-  // Production / Development Environment: Real PostgreSQL with TLS
   if (!globalForPrisma.prisma) {
-    prisma = new PrismaClient();
+    const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+    prisma = new PrismaClient({ adapter });
   } else {
     prisma = globalForPrisma.prisma;
   }
